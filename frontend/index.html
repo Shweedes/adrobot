@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Adrobot</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%230E7C66'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/js/main.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="#create" aria-label="Adrobot">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+          <path d="M4 11h5c3 0 3-6 7-6M9 11c4 0 4 6 7 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="4" cy="11" r="2.5" fill="currentColor"/>
+          <circle cx="17" cy="5" r="2.5" fill="currentColor"/>
+          <circle cx="17" cy="17" r="2.5" fill="currentColor"/>
+        </svg>
+        Adrobot
+      </a>
+      <nav class="tabs" role="tablist" aria-label="Разделы">
+        <button role="tab" id="tab-create" data-view="create" aria-selected="true">Создать кампанию</button>
+        <button role="tab" id="tab-edit" data-view="edit" aria-selected="false">Редактор</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="view-create" class="view" aria-labelledby="tab-create">
+      <div class="view-head">
+        <h1>Новая кампания</h1>
+        <p class="lede">Гео-поток отправит выбранные страны на Google, а весь остальной трафик пойдёт на оффер.</p>
+      </div>
+
+      <div class="create-grid">
+        <form id="create-form" class="panel" novalidate>
+          <div class="field" id="field-name">
+            <label for="f-name">Название</label>
+            <div class="prefixed">
+              <span class="prefix" id="prefix"></span>
+              <input id="f-name" name="name" autocomplete="off" maxlength="100" placeholder="campaign1" aria-describedby="h-name">
+            </div>
+            <p class="hint" id="h-name">Префикс добавится автоматически</p>
+          </div>
+
+          <div class="field" id="field-geo">
+            <label for="f-geo">Гео</label>
+            <input id="f-geo" name="geo" autocomplete="off" placeholder="AU, MX, RO" aria-describedby="h-geo">
+            <p class="hint" id="h-geo">Двухбуквенные коды стран через запятую</p>
+          </div>
+
+          <div class="field" id="field-offer">
+            <label for="f-offer">Оффер</label>
+            <div class="combo">
+              <input id="f-offer" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="offer-list" autocomplete="off" placeholder="Введите ID или название" aria-describedby="h-offer">
+              <ul id="offer-list" class="combo-panel" role="listbox" hidden></ul>
+            </div>
+            <p class="hint" id="h-offer">Поиск по офферам Keitaro</p>
+          </div>
+
+          <button class="btn primary block" type="submit" id="create-btn">Создать кампанию</button>
+        </form>
+
+        <aside class="panel route-panel" aria-label="Как будет работать кампания">
+          <h2>Маршрут трафика</h2>
+          <ol class="route" id="route"></ol>
+          <dl class="auto" id="auto"></dl>
+        </aside>
+      </div>
+
+      <div id="created" hidden></div>
+    </section>
+
+    <section id="view-edit" class="view" aria-labelledby="tab-edit" hidden>
+      <div class="view-head">
+        <h1>Редактор кампании</h1>
+        <p class="lede">Добавляйте и удаляйте офферы в потоках. Доли трафика между офферами пересчитываются поровну.</p>
+      </div>
+
+      <div class="toolbar">
+        <div class="field grow">
+          <label for="f-campaign">Кампания</label>
+          <div class="combo">
+            <input id="f-campaign" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="campaign-list" autocomplete="off" placeholder="Название или ID">
+            <ul id="campaign-list" class="combo-panel" role="listbox" hidden></ul>
+          </div>
+        </div>
+        <div class="field">
+          <span class="label" id="range-label">Период</span>
+          <div class="segmented" id="range" role="group" aria-labelledby="range-label">
+            <button type="button" data-range="today" aria-pressed="true">Сегодня</button>
+            <button type="button" data-range="yesterday" aria-pressed="false">Вчера</button>
+            <button type="button" data-range="7d" aria-pressed="false">7 дней</button>
+            <button type="button" data-range="30d" aria-pressed="false">30 дней</button>
+          </div>
+        </div>
+        <button class="btn" id="refresh" type="button" disabled>Обновить</button>
+      </div>
+
+      <div id="editor" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <div id="toasts" role="status" aria-live="polite"></div>
+</body>
+</html>
