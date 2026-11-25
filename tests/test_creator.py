@@ -9,7 +9,7 @@ from app.errors import (
     UpstreamError,
     ValidationFailed,
 )
-from app.keitaro.models import Domain
+from app.keitaro.models import Campaign, Domain
 
 
 async def test_creates_campaign_with_two_ordered_streams(creator, fake):
@@ -97,3 +97,17 @@ async def test_geo_stream_is_regular_and_offer_stream_is_default(creator, fake):
     await creator.create(name="types", geo="AU", offer_id=1)
     by_position = sorted(fake.created_stream_payloads, key=lambda p: p["position"])
     assert [p["type"] for p in by_position] == ["regular", "default"]
+
+
+async def test_name_is_free_again_after_campaign_deleted_in_keitaro(creator, fake):
+    first = await creator.create(name="again", geo="AU", offer_id=1)
+    await fake.delete_campaign(first.id)
+
+    second = await creator.create(name="again", geo="AU", offer_id=1)
+    assert second.id != first.id and second.name == "test_ivanov_again"
+
+
+async def test_name_taken_in_keitaro_admin_is_rejected(creator, fake):
+    fake.campaigns[1] = Campaign(id=1, name="test_ivanov_manual", state="active")
+    with pytest.raises(ConflictError):
+        await creator.create(name="manual", geo="AU", offer_id=1)

@@ -46,8 +46,7 @@ class CampaignCreator:
         """
         codes = parse_geo(geo)
         full_name = self._full_name(name)
-        if await self._uow.campaigns.name_exists(full_name):
-            raise ConflictError(f"Кампания «{full_name}» уже создана")
+        await self._ensure_name_free(full_name)
 
         offer = await self._catalog.get_offer(offer_id)
         defaults = await self._catalog.campaign_defaults()
@@ -74,6 +73,19 @@ class CampaignCreator:
         if not name:
             raise ValidationFailed("Название: добавьте что-нибудь после префикса")
         return prefix + name
+
+    async def _ensure_name_free(self, name: str) -> None:
+        """Проверяет название по Keitaro, а не по локальному реестру.
+
+        Keitaro — источник правды: кампанию могли удалить или создать в админке,
+        и локальная запись об этом не узнает.
+
+        Raises:
+            ConflictError: в Keitaro уже есть кампания с таким названием.
+        """
+        for campaign in await self._client.list_campaigns():
+            if campaign.name == name and campaign.state != "deleted":
+                raise ConflictError(f"Кампания «{name}» уже есть в Keitaro (ID {campaign.id})")
 
     async def _create_campaign(self, name: str, defaults: CampaignDefaults) -> Campaign:
         """Создаёт кампанию; занятое название превращает в понятную ошибку."""
