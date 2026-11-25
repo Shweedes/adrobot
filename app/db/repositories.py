@@ -12,10 +12,10 @@ class CampaignRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def name_exists(self, name: str) -> bool:
-        """Есть ли уже кампания с таким названием."""
+    async def count_named(self, name: str) -> int:
+        """Сколько записей реестра с таким названием."""
         stmt = select(func.count()).select_from(CampaignRecord).where(CampaignRecord.name == name)
-        return (await self._session.scalar(stmt) or 0) > 0
+        return await self._session.scalar(stmt) or 0
 
     def add(self, **fields) -> CampaignRecord:
         """Добавляет запись в сессию; сохранение — через `UnitOfWork.commit`."""

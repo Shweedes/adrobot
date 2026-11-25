@@ -18,13 +18,17 @@ class AuditAction(StrEnum):
 
 
 class CampaignRecord(Base):
-    """Кампания, созданная через приложение; источник правды — Keitaro."""
+    """Кампания, созданная через приложение; источник правды — Keitaro.
+
+    Название не уникально: после удаления кампании в Keitaro его можно занять снова,
+    а запись о старой кампании остаётся в реестре. Уникален только `keitaro_id`.
+    """
 
     __tablename__ = "campaigns"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     keitaro_id: Mapped[int] = mapped_column(Integer, unique=True, index=True)
-    name: Mapped[str] = mapped_column(String(255), unique=True)
+    name: Mapped[str] = mapped_column(String(255), index=True)
     geo: Mapped[str] = mapped_column(String(64))
     offer_id: Mapped[int] = mapped_column(Integer)
     alias: Mapped[str | None] = mapped_column(String(64), nullable=True)

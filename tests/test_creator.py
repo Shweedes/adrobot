@@ -67,7 +67,7 @@ async def test_failed_second_stream_rolls_campaign_back(creator, fake, uow):
         await creator.create(name="c", geo="AU", offer_id=1)
 
     assert len(fake.deleted) == 1 and fake.campaigns == {}
-    assert not await uow.campaigns.name_exists("test_ivanov_c")
+    assert await uow.campaigns.count_named("test_ivanov_c") == 0
 
 
 async def test_wrong_config_names_are_reported_together(creator, fake):
@@ -99,12 +99,13 @@ async def test_geo_stream_is_regular_and_offer_stream_is_default(creator, fake):
     assert [p["type"] for p in by_position] == ["regular", "default"]
 
 
-async def test_name_is_free_again_after_campaign_deleted_in_keitaro(creator, fake):
+async def test_name_is_free_again_after_campaign_deleted_in_keitaro(creator, fake, uow):
     first = await creator.create(name="again", geo="AU", offer_id=1)
     await fake.delete_campaign(first.id)
 
     second = await creator.create(name="again", geo="AU", offer_id=1)
     assert second.id != first.id and second.name == "test_ivanov_again"
+    assert await uow.campaigns.count_named("test_ivanov_again") == 2
 
 
 async def test_name_taken_in_keitaro_admin_is_rejected(creator, fake):
