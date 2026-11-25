@@ -1,11 +1,11 @@
 """Точка входа: сборка приложения и управление его ресурсами."""
 
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.staticfiles import StaticFiles
 
 from app.api.error_handlers import register_error_handlers
@@ -42,10 +42,26 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await engine.dispose()
 
 
+async def revalidate_frontend(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
+    """Просит браузер перепроверять статику при каждой загрузке.
+
+    Без этого после обновления кода браузер берёт старые ES-модули из кэша,
+    и интерфейс расходится с API. ETag сохраняется, так что неизменные файлы
+    не скачиваются заново.
+    """
+    response = await call_next(request)
+    if not request.url.path.startswith("/api"):
+        response.headers.setdefault("Cache-Control", "no-cache")
+    return response
+
+
 def create_app() -> FastAPI:
     """Собирает приложение; статика монтируется последней, чтобы не перекрывать `/api`."""
     app = FastAPI(title="Adrobot", lifespan=lifespan)
     register_error_handlers(app)
+    app.middleware("http")(revalidate_frontend)
     app.include_router(router, prefix="/api")
     app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
     return app

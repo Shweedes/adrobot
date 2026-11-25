@@ -53,11 +53,13 @@ def geo_stream_payload(*, campaign_id: int, geo: list[str], redirect_url: str) -
 def offer_stream_payload(*, campaign_id: int, offer: Offer) -> dict:
     """Поток 2: без фильтров, весь остальной трафик идёт на оффер.
 
+    Имя без ID оффера: состав офферов меняется в редакторе, и имя бы устарело.
+
     Keitaro требует `action_type` и у потоков с офферами.
     """
     return {
         "campaign_id": campaign_id,
-        "name": f"Offer {offer.id}",
+        "name": "Offers",
         "type": "regular",
         "position": 2,
         "weight": 100,

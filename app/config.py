@@ -15,11 +15,11 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    keitaro_base_url: str = "https://tlgk.host"
+    keitaro_base_url: str = "https://keitaro-for-tests.etolegko.com"
     keitaro_api_key: SecretStr = SecretStr("")
     keitaro_timeout: float = 15.0
 
-    keitaro_domain: str = "kylovoa.com"
+    keitaro_domain: str = "kt-emulator.test"
     keitaro_group: str = "FORTESTS"
     keitaro_source: str = "FORTESTS"
 
