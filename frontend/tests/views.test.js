@@ -137,3 +137,11 @@ test("createdHtml содержит ссылку, копирование и от�
   assert.match(html, /data-open="9"/);
   assert.match(html, /data-reset/);
 });
+
+test("без статистики вместо цифр прочерки и пояснение, потоки на месте", () => {
+  const html = campaignHtml({ ...details, stats_error: "Keitaro не отдал статистику" });
+  assert.match(html, /Keitaro не отдал статистику/);
+  assert.ok(!html.includes(numberFormat.format(1234)));
+  assert.match(html, /—/);
+  assert.match(html, /data-remove/);
+});

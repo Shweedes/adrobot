@@ -73,11 +73,16 @@ class StreamView(BaseModel):
 
 
 class CampaignDetails(BaseModel):
-    """Кампания с потоками и статистикой за период."""
+    """Кампания с потоками и статистикой за период.
+
+    `stats_error` заполнен, если Keitaro не отдал отчёт: тогда цифры нулевые
+    и интерфейс показывает прочерки вместо них.
+    """
 
     campaign: CampaignSummary
     streams: list[StreamView]
     totals: StatsView
+    stats_error: str | None = None
     range: RangeKey
     date_from: date
     date_to: date

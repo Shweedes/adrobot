@@ -26,6 +26,18 @@ async def test_view_contains_streams_and_stats(creator, editor, fake):
     assert (view.totals.clicks, view.totals.unique, view.totals.bots) == (20, 16, 4)
     assert view.campaign.tracking_url == "https://in.posdk.xyz/abc123"
     assert _offers(view, offer_sid)[0].name == "Miaflow spin"
+    assert view.stats_error is None
+
+
+async def test_view_opens_without_stats_when_report_fails(creator, editor, fake):
+    cid, offer_sid, _ = await _make(creator, fake)
+    fake.stats_error = NotFoundError("Объект не найден в Keitaro")
+
+    view = await editor.get_details(cid, "today")
+
+    assert view.stats_error
+    assert len(view.streams) == 2 and _offers(view, offer_sid)[0].offer_id == 1
+    assert view.totals.clicks == 0 and view.streams[1].stats.clicks == 0
 
 
 async def test_add_offer_rebalances_shares_to_100(creator, editor, fake):

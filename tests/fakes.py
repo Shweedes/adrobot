@@ -35,6 +35,7 @@ class FakeKeitaro:
         self.last_campaign_payload: dict = {}
         self.fail_on_stream_number: int | None = None
         self.campaign_error: str | None = None
+        self.stats_error: Exception | None = None
         self._next_id = 100
         self._streams_created = 0
 
@@ -97,6 +98,8 @@ class FakeKeitaro:
         return stream
 
     async def stream_stats(self, campaign_id, date_from, date_to, timezone):
+        if self.stats_error:
+            raise self.stats_error
         streams = await self.list_streams(campaign_id)
         per_stream = {s.id: Stats(clicks=10, unique=8, bots=2) for s in streams}
         return StatsReport(per_stream=per_stream, total=Stats(clicks=20, unique=16, bots=4))

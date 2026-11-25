@@ -10,7 +10,7 @@
  * @typedef {{id: number, name: string, position: number, enabled: boolean,
  *   kind: "redirect"|"offers", target: string|null, filters: StreamFilter[],
  *   offers: StreamOffer[], stats: Stats}} Stream
- * @typedef {{campaign: Campaign, streams: Stream[], totals: Stats, range: string}} CampaignDetails
+ * @typedef {{campaign: Campaign, streams: Stream[], totals: Stats, stats_error?: string|null, range: string}} CampaignDetails
  * @typedef {{prefix: string, domain: string, group: string, source: string,
  *   redirect_url: string}} Meta
  */

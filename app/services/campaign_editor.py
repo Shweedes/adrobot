@@ -1,16 +1,18 @@
 """Сценарии редактора: просмотр кампаний, добавление и удаление офферов."""
 
 import asyncio
+import logging
 from dataclasses import asdict
+from datetime import date
 
 from app.config import Settings
 from app.db.models import AuditAction
 from app.db.uow import UnitOfWork
 from app.domain.ranges import RangeKey, resolve_range
 from app.domain.shares import split_evenly
-from app.errors import ConflictError, ForbiddenError, NotFoundError
+from app.errors import AppError, ConflictError, ForbiddenError, NotFoundError
 from app.keitaro import payloads
-from app.keitaro.models import Campaign, Stats, Stream, StreamOffer
+from app.keitaro.models import Campaign, Stats, StatsReport, Stream, StreamOffer
 from app.services.catalog import CatalogService, tracking_url
 from app.services.ports import KeitaroPort
 from app.services.views import (
@@ -21,6 +23,8 @@ from app.services.views import (
     StreamOfferView,
     StreamView,
 )
+
+log = logging.getLogger(__name__)
 
 
 def _stream_view(stream: Stream, offer_names: dict[int, str], stats: Stats) -> StreamView:
@@ -81,9 +85,9 @@ class CampaignEditor:
         campaign = await self._editable(campaign_id)
         timezone = self._settings.stats_timezone
         date_from, date_to = resolve_range(range_key, timezone)
-        streams, report, offers, host = await asyncio.gather(
+        streams, (report, stats_error), offers, host = await asyncio.gather(
             self._client.list_streams(campaign_id),
-            self._client.stream_stats(campaign_id, date_from, date_to, timezone),
+            self._stats(campaign_id, date_from, date_to, timezone),
             self._catalog.offers(),
             self._catalog.host_for(campaign.domain_id),
         )
@@ -99,6 +103,7 @@ class CampaignEditor:
             ),
             streams=[_stream_view(s, names, report.per_stream.get(s.id, Stats())) for s in ordered],
             totals=StatsView(**asdict(report.total)),
+            stats_error=stats_error,
             range=range_key,
             date_from=date_from,
             date_to=date_to,
@@ -150,6 +155,21 @@ class CampaignEditor:
         )
         await self._uow.commit()
         return await self.get_details(campaign_id, range_key)
+
+    async def _stats(
+        self, campaign_id: int, date_from: date, date_to: date, timezone: str
+    ) -> tuple[StatsReport, str | None]:
+        """Отчёт по потокам; сбой отчёта не мешает открыть кампанию.
+
+        Статистика вторична: без неё редактор всё равно показывает потоки и офферы,
+        а вместо цифр выводит причину.
+        """
+        try:
+            report = await self._client.stream_stats(campaign_id, date_from, date_to, timezone)
+        except AppError as exc:
+            log.warning("Статистика кампании %s недоступна: %s", campaign_id, exc.message)
+            return StatsReport(per_stream={}, total=Stats()), "Keitaro не отдал статистику"
+        return report, None
 
     def _is_visible(self, campaign: Campaign) -> bool:
         """Редактор работает с кампанией: префикс подходит или проверка отключена."""

@@ -18,15 +18,19 @@ const TRASH_ICON =
   'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 /**
- * Клики, уники и боты.
+ * Клики, уники и боты; без статистики вместо цифр прочерки, а не нули.
  * @param {import("../types.js").Stats} stats
+ * @param {boolean} [unavailable] Keitaro не отдал отчёт
  */
-export const statsHtml = (stats) => `
-  <dl class="stats">
-    <div><dt>Клики</dt><dd>${numberFormat.format(stats.clicks)}</dd></div>
-    <div><dt>Уники</dt><dd>${numberFormat.format(stats.unique)}</dd></div>
-    <div><dt>Боты</dt><dd>${numberFormat.format(stats.bots)}</dd></div>
+export function statsHtml(stats, unavailable = false) {
+  const value = (n) => (unavailable ? "—" : numberFormat.format(n));
+  return `
+  <dl class="stats" ${unavailable ? 'title="Статистика недоступна"' : ""}>
+    <div><dt>Клики</dt><dd>${value(stats.clicks)}</dd></div>
+    <div><dt>Уники</dt><dd>${value(stats.unique)}</dd></div>
+    <div><dt>Боты</dt><dd>${value(stats.bots)}</dd></div>
   </dl>`;
+}
 
 /**
  * Сообщение с заголовком и необязательной кнопкой.
@@ -138,8 +142,9 @@ function offersHtml(stream) {
  * Карточка потока с номером по порядку.
  * @param {import("../types.js").Stream} stream
  * @param {number} index
+ * @param {boolean} [noStats] статистика недоступна
  */
-export function flowHtml(stream, index) {
+export function flowHtml(stream, index, noStats = false) {
   const disabled = stream.enabled ? "" : '<span class="badge off">Отключён</span>';
   return `
     <li class="flow ${stream.enabled ? "" : "is-off"}">
@@ -150,7 +155,7 @@ export function flowHtml(stream, index) {
             <div class="flow-title"><h3>${esc(stream.name)}</h3>${disabled}</div>
             <div class="chips">${filtersHtml(stream)}</div>
           </div>
-          ${statsHtml(stream.stats)}
+          ${statsHtml(stream.stats, noStats)}
         </div>
         ${stream.kind === "offers" ? offersHtml(stream) : targetHtml(stream)}
       </div>
@@ -163,6 +168,10 @@ export function flowHtml(stream, index) {
  */
 export function campaignHtml(details) {
   const { campaign, streams, totals } = details;
+  const noStats = Boolean(details.stats_error);
+  const statsNote = noStats
+    ? `<p class="stats-note">${esc(details.stats_error)}: цифры за период не показаны.</p>`
+    : "";
   const active = campaign.state === "active";
   const link = campaign.tracking_url
     ? `<div class="link-row"><code>${esc(campaign.tracking_url)}</code>` +
@@ -175,7 +184,8 @@ export function campaignHtml(details) {
         <div class="meta"><span class="badge ${active ? "" : "off"}">${active ? "Активна" : esc(campaign.state || "—")}</span><span>ID ${campaign.id}</span></div>
         ${link}
       </div>
-      ${statsHtml(totals)}
+      ${statsHtml(totals, noStats)}
     </div>
-    <ol class="flows">${streams.map(flowHtml).join("")}</ol>`;
+    ${statsNote}
+    <ol class="flows">${streams.map((s, i) => flowHtml(s, i, noStats)).join("")}</ol>`;
 }
