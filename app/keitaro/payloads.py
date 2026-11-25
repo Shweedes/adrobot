@@ -51,7 +51,7 @@ def geo_stream_payload(*, campaign_id: int, geo: list[str], redirect_url: str) -
 
 
 def offer_stream_payload(*, campaign_id: int, offer: Offer) -> dict:
-    """Поток 2: без фильтров, весь остальной трафик идёт на оффер.
+    """Поток 2: запасной (`default`), сюда уходит всё, что не поймал гео-поток.
 
     Имя без ID оффера: состав офферов меняется в редакторе, и имя бы устарело.
 
@@ -60,7 +60,7 @@ def offer_stream_payload(*, campaign_id: int, offer: Offer) -> dict:
     return {
         "campaign_id": campaign_id,
         "name": "Offers",
-        "type": "regular",
+        "type": "default",
         "position": 2,
         "weight": 100,
         "schema": "landings",

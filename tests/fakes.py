@@ -33,6 +33,7 @@ class FakeKeitaro:
         self.streams: dict[int, Stream] = {}
         self.deleted: list[int] = []
         self.last_campaign_payload: dict = {}
+        self.created_stream_payloads: list[dict] = []
         self.fail_on_stream_number: int | None = None
         self.campaign_error: str | None = None
         self.stats_error: Exception | None = None
@@ -88,6 +89,7 @@ class FakeKeitaro:
         self._streams_created += 1
         if self.fail_on_stream_number == self._streams_created:
             raise UpstreamError("Keitaro вернул 500: boom")
+        self.created_stream_payloads.append(payload)
         stream = Stream.model_validate({"id": self._id(), **payload})
         self.streams[stream.id] = stream
         return stream

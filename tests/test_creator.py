@@ -91,3 +91,9 @@ async def test_name_taken_by_archived_campaign_gives_friendly_error(creator, fak
     with pytest.raises(ConflictError) as exc:
         await creator.create(name="c", geo="AU", offer_id=1)
     assert "архив" in exc.value.message
+
+
+async def test_geo_stream_is_regular_and_offer_stream_is_default(creator, fake):
+    await creator.create(name="types", geo="AU", offer_id=1)
+    by_position = sorted(fake.created_stream_payloads, key=lambda p: p["position"])
+    assert [p["type"] for p in by_position] == ["regular", "default"]
